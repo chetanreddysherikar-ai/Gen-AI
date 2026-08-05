@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         username = "chetu"
         password = "7975474588"
-        email = "chetangowda7975@gmail.com"
+        email = "chetanreddysherikar@gmail.com"
 
         user, created = User.objects.get_or_create(username=username)
         user.email = email
