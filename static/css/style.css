@@ -272,3 +272,55 @@ main { flex: 1; }
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== 3D Cyberpunk Robot Mascot Styling ===== */
+.robot-hero-card {
+  position: relative;
+  background: rgba(13, 14, 28, 0.75) !important;
+  border: 1px solid rgba(124, 92, 255, 0.35) !important;
+  border-radius: 28px !important;
+  overflow: hidden;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(124, 92, 255, 0.15);
+  backdrop-filter: blur(20px);
+}
+
+.robot-3d-wrapper {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#robot-3d-scene {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.robot-prompt-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 4px solid var(--accent);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  font-family: monospace, sans-serif;
+  color: #00f2fe;
+  font-size: 0.92rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.robot-prompt-box:hover {
+  border-color: #00f2fe;
+  transform: translateX(6px);
+  background: rgba(0, 242, 254, 0.08);
+}
+
+.cyber-grid-bg {
+  background-image: linear-gradient(rgba(124, 92, 255, 0.07) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(124, 92, 255, 0.07) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+

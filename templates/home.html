@@ -1,44 +1,75 @@
 {% extends 'base.html' %}
 
-{% block title %}AI Text Generator — Home{% endblock %}
+{% block title %}Gen-AI — Interactive AI Assistant{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center fade-in-up">
-    <div class="col-lg-10">
+    <div class="col-lg-11">
 
-        <div class="glass-card p-5 mb-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <div>
-                    <span class="hero-badge mb-2"><i class="bi bi-stars"></i>Chetan Reddy</span>
-                    <h1 class="fw-bold mt-3 mb-1">
-                        <span class="gradient-text">AI Text Generator</span> 🤖
+        <!-- 3D Interactive Cyberpunk Hero Card -->
+        <div class="robot-hero-card cyber-grid-bg p-4 p-md-5 mb-4">
+            
+            <div class="row align-items-center">
+                
+                <!-- Left Column: Hero Text & Interactive Prompt Cards -->
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <span class="hero-badge mb-3"><i class="bi bi-cpu-fill text-cyan"></i> NextGen AI Assistant</span>
+                    <h1 class="display-5 fw-bold mb-3">
+                        <span class="gradient-text">Gen-AI</span> 🤖
                     </h1>
-                    <p class="text-light mb-0">
-                        Turn any topic into clean, structured, ready-to-use content in seconds.
+                    <p class="text-light fs-5 mb-4">
+                        Move your mouse across the screen to interact with your personal 3D AI assistant.
+                    </p>
+
+                    <!-- Interactive Prompt Display Cards (Inspired by ChainGPT UI) -->
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div class="robot-prompt-box">
+                            <i class="bi bi-chat-quote-fill me-2 text-warning"></i>
+                            "EXPLAIN WHAT A SMART CONTRACT DOES IN SIMPLE TERMS."
+                        </div>
+                        <div class="robot-prompt-box">
+                            <i class="bi bi-lightning-charge-fill me-2 text-cyan"></i>
+                            "GENERATE SECURE PYTHON & DJANGO CODE ARCHITECTURE."
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'dashboard' %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                            <a href="{% url 'request_otp' %}" class="btn btn-outline-info btn-lg">
+                                <i class="bi bi-envelope-check"></i> Email OTP Login
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive 3D Mouse-Tracking Robot Canvas -->
+                <div class="col-lg-6">
+                    <div class="robot-3d-wrapper">
+                        <div id="robot-3d-scene"></div>
+                    </div>
+                    <p class="text-center text-muted small mt-2">
+                        <i class="bi bi-mouse me-1"></i> Move mouse to rotate 3D Robot & Eye Visor
                     </p>
                 </div>
 
-                <div class="d-flex gap-2">
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'dashboard' %}" class="btn btn-success">
-                            <i class="bi bi-speedometer2"></i> Go to Dashboard
-                        </a>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-primary">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
-                        </a>
-                        <a href="{% url 'register' %}" class="btn btn-success">
-                            <i class="bi bi-person-plus"></i> Register
-                        </a>
-                    {% endif %}
-                </div>
             </div>
 
-            <hr>
+        </div>
 
-            <h2 class="text-center mb-4">Try it now — Generate AI Content</h2>
+        <!-- AI Text Generator Form -->
+        <div class="glass-card p-4 p-md-5 mb-4">
+            <h2 class="text-center fw-bold mb-4">
+                ✨ Generate AI Content with <span class="gradient-text">Gen-AI</span>
+            </h2>
 
-            <form method="POST" class="generate-form mx-auto" style="max-width: 640px;">
+            <form method="POST" class="generate-form mx-auto" style="max-width: 680px;">
                 {% csrf_token %}
 
                 <div class="mb-3">
@@ -48,18 +79,18 @@
                     {% endif %}
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-lg w-100">
-                    <i class="bi bi-magic"></i> Generate
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fs-5 fw-bold">
+                    <i class="bi bi-magic me-2"></i> Generate Content Now
                 </button>
             </form>
         </div>
 
         {% if generated_text %}
-        <div class="glass-card p-4 fade-in-up">
+        <div class="glass-card p-4 fade-in-up mb-4">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Generated Content</h3>
                 <button class="btn btn-success btn-sm" onclick="copyText('result')">
-                    <i class="bi bi-clipboard"></i> Copy
+                    <i class="bi bi-clipboard me-1"></i> Copy Text
                 </button>
             </div>
             <hr>
@@ -74,15 +105,14 @@
                     <textarea name="raw_text" hidden>{{ raw_text }}</textarea>
 
                     <button type="submit" class="btn btn-danger mt-3">
-                        📄 Download PDF
+                        <i class="bi bi-file-pdf me-1"></i> Download PDF Document
                     </button>
                 </form>
             </div> 
 
             {% if audio_url %}
             <div class="mt-4">
-                <h5>🔊 Listen to AI Voice</h5>
-
+                <h5>🔊 Listen to AI Voice Narration</h5>
                 <audio controls style="width:100%;">
                     <source src="{{ audio_url }}" type="audio/mpeg">
                     Your browser does not support the audio element.
@@ -92,11 +122,11 @@
 
         </div> 
 
-        <!-- Copy toast -->
+        <!-- Copy Toast -->
         <div class="toast-container position-fixed bottom-0 end-0 p-3">
             <div id="copyToast" class="toast align-items-center text-bg-success border-0" role="alert">
                 <div class="d-flex">
-                    <div class="toast-body"><i class="bi bi-check-circle"></i> Copied to clipboard!</div>
+                    <div class="toast-body"><i class="bi bi-check-circle me-1"></i> Copied to clipboard!</div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
