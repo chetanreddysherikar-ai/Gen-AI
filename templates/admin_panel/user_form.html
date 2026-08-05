@@ -1,0 +1,83 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}{% if mode == 'add' %}Add User{% else %}Edit User{% endif %} — AI Text Generator{% endblock %}
+
+{% block admin_content %}
+
+<div class="glass-card p-4">
+    <h3 class="mb-4">
+        {% if mode == 'add' %}
+            <i class="bi bi-person-plus"></i> Add New User
+        {% else %}
+            <i class="bi bi-pencil-square"></i> Edit User: {{ target_user.username }}
+        {% endif %}
+    </h3>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}<small class="text-danger">{{ form.username.errors|striptags }}</small>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}<small class="text-danger">{{ form.email.errors|striptags }}</small>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}<small class="text-danger">{{ form.full_name.errors|striptags }}</small>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Mobile</label>
+                {{ form.mobile }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Gender</label>
+                {{ form.gender }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">
+                    {% if mode == 'add' %}Password{% else %}New Password{% endif %}
+                </label>
+                {% if mode == 'add' %}
+                    {{ form.password }}
+                {% else %}
+                    {{ form.new_password }}
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center gap-2 mt-4">
+                {{ form.is_active }}
+                <label class="form-check-label">Active account</label>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center gap-2 mt-4">
+                {{ form.is_staff }}
+                <label class="form-check-label">Grant admin panel access</label>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> {% if mode == 'add' %}Create User{% else %}Save Changes{% endif %}
+        </button>
+        <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Route{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in-up">
+    <div class="col-lg-6">
+
+        <div class="glass-card p-5 mb-4 text-center">
+            <h2 class="mb-4"><i class="bi bi-geo-alt-fill text-danger"></i> Smart Route Finder</h2>
+            
+            <p class="text-light mb-4">
+                Detect your exact starting location and get the perfect Google Maps route to your destination.
+            </p>
+
+            <!-- Location Detection Button -->
+            <button id="getLocationBtn" class="btn btn-warning btn-lg w-100 mb-3">
+                <i class="bi bi-crosshair"></i> Detect My Exact Location
+            </button>
+            
+            <!-- Status message for location detection -->
+            <p id="locationStatus" class="fw-bold text-light"></p>
+            
+            <!-- Destination Form (Hidden until location is found) -->
+            <form id="routeForm" class="mt-4" style="display: none;">
+                <div class="mb-3 text-start">
+                    <label class="form-label text-light">Where do you want to go?</label>
+                    <input type="text" id="destination" class="form-control form-control-lg" placeholder="e.g., Kalaburagi Railway Station" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-map-fill"></i> Get Perfect Route
+                </button>
+            </form>
+        </div>
+
+    </div> 
+</div> 
+
+<!-- JavaScript to handle GPS and Google Maps Routing -->
+<script>
+    const getLocBtn = document.getElementById('getLocationBtn');
+    const statusText = document.getElementById('locationStatus');
+    const routeForm = document.getElementById('routeForm');
+    
+    let userLat = null;
+    let userLng = null;
+
+    // 1. Ask for and detect exact GPS location
+    getLocBtn.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            statusText.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Locating you...</span>';
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Success! Grab coordinates
+                    userLat = position.coords.latitude;
+                    userLng = position.coords.longitude;
+                    
+                    statusText.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Exact location detected successfully!</span>`;
+                    
+                    // Show the destination form
+                    routeForm.style.display = "block";
+                    getLocBtn.style.display = "none";
+                },
+                (error) => {
+                    // Handle errors (e.g., user denied permission)
+                    statusText.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Error: Please allow location access in your browser settings.</span>`;
+                },
+                { enableHighAccuracy: true } // This forces the device to use exact GPS
+            );
+        } else {
+            statusText.innerText = "Geolocation is not supported by your browser.";
+        }
+    });
+
+    // 2. Handle form submission and redirect to Google Maps
+    routeForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const destination = document.getElementById('destination').value;
+        
+        if (userLat && userLng && destination) {
+            // Build the official Google Maps Directions URL
+            // api=1 tells Google to use the modern maps interface
+            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${encodeURIComponent(destination)}`;
+            
+            // Open the route in a new tab (or the Google Maps app if on mobile)
+            window.open(googleMapsUrl, '_blank');
+        }
+    });
+</script>
+{% endblock %}

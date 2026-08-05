@@ -1,0 +1,70 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Generated Content — AI Text Generator{% endblock %}
+
+{% block admin_content %}
+
+<div class="glass-card p-4">
+    <h3 class="mb-3"><i class="bi bi-clock-history"></i> Generated Content</h3>
+
+    <form method="get" class="d-flex gap-2 mb-3">
+        <input type="text" name="q" value="{{ query }}" class="form-control"
+               placeholder="Search by topic or username...">
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+        {% if query %}
+        <a href="{% url 'admin_history' %}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Topic</th>
+                    <th>User</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in page_obj %}
+                <tr>
+                    <td>{{ item.topic }}</td>
+                    <td>{{ item.user.username }}</td>
+                    <td>{{ item.created_at|date:"M d, Y - H:i" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'admin_history_detail' item.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        <a href="{% url 'admin_history_delete' item.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No entries found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center mb-0">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+{% endblock %}

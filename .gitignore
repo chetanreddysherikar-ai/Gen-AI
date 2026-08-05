@@ -1,0 +1,28 @@
+# Secret environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+*.sqlite3
+*.db
+
+# Media uploads & static files
+media/
+staticfiles/
+
+# Python / Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+.venv/

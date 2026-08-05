@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — AI Text Generator{% endblock %}
+
+{% block content %}
+<div class="row fade-in-up">
+
+    <!-- Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="glass-card text-center p-4">
+            <div class="avatar-circle mb-3">
+                {{ request.user.username|slice:":1"|upper }}
+            </div>
+
+            <h4 class="mb-1">{{ request.user.username }}</h4>
+            <p class="text-muted mb-3">Welcome back 👋</p>
+
+            <hr>
+
+            <a href="{% url 'profile' %}" class="btn btn-outline-primary w-100 mb-2">
+                <i class="bi bi-person"></i> My Profile
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-danger w-100">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="col-lg-9">
+        <div class="glass-card p-4 mb-4">
+            <h2 class="mb-4"><span class="gradient-text">🤖 AI Text Generator</span></h2>
+
+            <form method="POST" class="generate-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Enter Topic</label>
+                    <input type="text" name="topic" class="form-control form-control-lg"
+                           placeholder="Example: Artificial Intelligence" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-magic"></i> Generate
+                </button>
+            </form>
+        </div>
+
+        {% if generated_text %}
+        <div class="glass-card p-4 mb-4 fade-in-up">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0"><i class="bi bi-file-earmark-text"></i> Generated Result</h3>
+                <button class="btn btn-success btn-sm" onclick="copyText('result')">
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+            </div>
+            <hr>
+            <div id="result" class="generated-content">
+                {{ generated_text|safe }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Search History -->
+        <div class="glass-card p-4">
+            <h3><i class="bi bi-clock-history"></i> Search History</h3>
+            <hr>
+
+            {% if history %}
+                {% for item in history %}
+                <div class="history-item p-3 mb-3">
+                    <h5 class="mb-1">{{ item.topic }}</h5>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar3"></i> {{ item.created_at|date:"M d, Y - H:i" }}
+                    </small>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No searches yet — generate your first topic above!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="copyToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body"><i class="bi bi-check-circle"></i> Copied to clipboard!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
