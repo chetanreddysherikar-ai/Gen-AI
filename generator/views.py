@@ -99,9 +99,7 @@ Do not add any extra text outside this structure.
 
     models_to_try = [
         "gemini-2.5-flash",
-        "gemini-2.0-flash",
         "gemini-1.5-flash",
-        "gemini-1.5-pro",
     ]
 
     last_error = None
@@ -117,12 +115,15 @@ Do not add any extra text outside this structure.
             except Exception as e:
                 last_error = e
                 import time
-                time.sleep(0.5)
+                time.sleep(1)
 
-    if last_error:
-        raise last_error
-    raise RuntimeError("Service temporarily busy. Please try again in a few seconds.")
-
+    err_str = str(last_error)
+    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
+        raise RuntimeError("Google AI Free Tier daily quota limit reached (20 requests/day). Please generate a new free API key at https://aistudio.google.com/app/apikey and update your .env file!")
+    elif "503" in err_str or "UNAVAILABLE" in err_str:
+        raise RuntimeError("Google AI servers are currently experiencing high demand. Please wait 10 seconds and try again.")
+    else:
+        raise last_error or RuntimeError("Service temporarily busy. Please try again.")
 
 
 def home(request):
@@ -153,7 +154,6 @@ def home(request):
                     try:
                         clean_text = re.sub(r'[#*\-`]', '', raw_text).strip()
                         if clean_text:
-                            # Use first 300 characters for audio generation to prevent rate limits
                             tts = gTTS(text=clean_text[:300], lang="en")
                             filename = f"{uuid.uuid4()}.mp3"
                             audio_path = os.path.join(
@@ -168,7 +168,14 @@ def home(request):
                         audio_url = ""
 
             except Exception as e:
-                generated_html = f"<p class='text-danger'>⚠️ {e}</p>"
+                err_msg = str(e)
+                if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "quota" in err_msg.lower():
+                    clean_msg = "⚠️ <strong>Google AI Free Tier Daily Quota Exceeded (20 Requests/Day).</strong><br>Please create a new free API key at <a href='https://aistudio.google.com/app/apikey' target='_blank' class='text-warning fw-bold'>aistudio.google.com</a> and update your <code>.env</code> file!"
+                elif "503" in err_msg or "UNAVAILABLE" in err_msg:
+                    clean_msg = "⚠️ <strong>Google AI servers are temporarily busy.</strong> Please wait 10 seconds and click Generate again!"
+                else:
+                    clean_msg = f"⚠️ {err_msg}"
+                generated_html = f"<div class='alert alert-warning border-warning p-3 rounded-3 mb-0'>{clean_msg}</div>"
 
     return render(request, "home.html", {
         "form": form,
