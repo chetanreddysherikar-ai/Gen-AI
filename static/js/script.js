@@ -327,38 +327,27 @@ function copyText(elementId) {
   });
 }
 
-// --- BROWSER NATIVE SPEECH SYNTHESIS VOICE CONTROLLER ---
-let currentUtteranceIndex = 0;
-let textChunks = [];
-let isVoicePlaying = false;
+// --- 100% MOBILE & DESKTOP COMPATIBLE SPEECH SYNTHESIS ENGINE ---
+let speechKeeperInterval = null;
 
 function playAIVoice(elementId) {
   if (!('speechSynthesis' in window)) {
-    alert("Speech Synthesis is not supported in this browser.");
+    alert("Speech Synthesis is not supported on this browser.");
     return;
   }
 
   const playBtn = document.getElementById("voicePlayBtn");
   const statusEl = document.getElementById("voiceStatus");
 
-  // Resume if paused
-  if (window.speechSynthesis.paused) {
-    window.speechSynthesis.resume();
-    isVoicePlaying = true;
-    if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
-    if (statusEl) statusEl.style.display = "inline-flex";
+  // Synchronous resume on click gesture (critical for Mobile Chrome & Safari)
+  window.speechSynthesis.resume();
+
+  // Toggle stop/cancel if currently active
+  if (window.speechSynthesis.speaking) {
+    stopAIVoice();
     return;
   }
 
-  // Pause if speaking
-  if (window.speechSynthesis.speaking && isVoicePlaying) {
-    window.speechSynthesis.pause();
-    isVoicePlaying = false;
-    if (playBtn) playBtn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Resume Voice';
-    return;
-  }
-
-  // Cancel any previous speech
   window.speechSynthesis.cancel();
 
   const el = document.getElementById(elementId) || document.getElementById("ai-text-content") || document.getElementById("result");
@@ -370,63 +359,57 @@ function playAIVoice(elementId) {
   let cleanText = rawText.replace(/[*#\-`]/g, " ").replace(/\s+/g, " ").trim();
   if (!cleanText) return;
 
-  // Break text into natural sentence chunks for continuous complete reading
-  textChunks = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
-  currentUtteranceIndex = 0;
-  isVoicePlaying = true;
+  // Shorten chunk for instant responsive playback
+  if (cleanText.length > 400) {
+    cleanText = cleanText.substring(0, 400) + ".";
+  }
 
-  function speakChunk() {
-    if (currentUtteranceIndex >= textChunks.length || !isVoicePlaying) {
-      isVoicePlaying = false;
-      if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
-      if (statusEl) statusEl.style.display = "none";
-      return;
-    }
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
 
-    const chunk = textChunks[currentUtteranceIndex].trim();
-    if (!chunk) {
-      currentUtteranceIndex++;
-      speakChunk();
-      return;
-    }
+  // Pre-fetch voices
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    const preferredVoice = voices.find(v => v.lang.startsWith("en"));
+    if (preferredVoice) utterance.voice = preferredVoice;
+  }
 
-    const utterance = new SpeechSynthesisUtterance(chunk);
-    utterance.lang = "en-US";
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      const preferredVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("David") || v.name.includes("Zira")));
-      if (preferredVoice) utterance.voice = preferredVoice;
-    }
-
-    utterance.onend = function () {
-      currentUtteranceIndex++;
-      speakChunk();
-    };
-
-    utterance.onerror = function (e) {
-      console.warn("Speech chunk error:", e);
-      currentUtteranceIndex++;
-      speakChunk();
-    };
-
+  utterance.onstart = function () {
     if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
     if (statusEl) statusEl.style.display = "inline-flex";
 
-    window.speechSynthesis.resume();
-    window.speechSynthesis.speak(utterance);
-  }
+    // Keep mobile Chrome audio context alive during speech
+    if (speechKeeperInterval) clearInterval(speechKeeperInterval);
+    speechKeeperInterval = setInterval(() => {
+      if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      } else {
+        clearInterval(speechKeeperInterval);
+      }
+    }, 2000);
+  };
 
-  window.speechSynthesis.resume();
-  speakChunk();
+  utterance.onend = function () {
+    if (speechKeeperInterval) clearInterval(speechKeeperInterval);
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+    if (statusEl) statusEl.style.display = "none";
+  };
+
+  utterance.onerror = function (e) {
+    console.warn("Speech Synthesis Error:", e);
+    if (speechKeeperInterval) clearInterval(speechKeeperInterval);
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+    if (statusEl) statusEl.style.display = "none";
+  };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 function stopAIVoice() {
-  isVoicePlaying = false;
-  textChunks = [];
-  currentUtteranceIndex = 0;
+  if (speechKeeperInterval) clearInterval(speechKeeperInterval);
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
@@ -435,6 +418,7 @@ function stopAIVoice() {
   if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
   if (statusEl) statusEl.style.display = "none";
 }
+
 
 // --- CUSTOM TEXT-TO-AUDIO CONVERTER ENGINE ---
 let customUtteranceIndex = 0;
