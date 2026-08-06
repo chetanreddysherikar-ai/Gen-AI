@@ -119,7 +119,7 @@ def home(request):
             topic = form.cleaned_data["topic"]
             
             try:
-                # Generate AI text
+                # Generate AI text via Gemini API
                 raw_text = generate_text(topic)
 
                 if raw_text and raw_text.strip():
@@ -129,31 +129,23 @@ def home(request):
                         extensions=["extra"]
                     )
 
-                    # Clean the text for TTS (remove Markdown formatting)
-                    clean_text = re.sub(r'[#*\-`]', '', raw_text).strip()
-
-                    # Prevent gTTS from crashing if the AI didn't return pronounceable words
-                    if not clean_text:
-                        raise ValueError("The AI generated structure, but no readable words. Please try a more descriptive topic.")
-
-                    # Convert Text to Speech
-                    tts = gTTS(text=clean_text, lang="en")
-
-                    filename = f"{uuid.uuid4()}.mp3"
-
-                    audio_path = os.path.join(
-                        settings.MEDIA_ROOT,
-                        "audio",
-                        filename
-                    )
-
-                    # Create media/audio if it doesn't exist
-                    os.makedirs(os.path.dirname(audio_path), exist_ok=True)
-
-                    # Save the audio
-                    tts.save(audio_path)
-
-                    audio_url = settings.MEDIA_URL + "audio/" + filename
+                    # Generate optional TTS audio narration safely
+                    try:
+                        clean_text = re.sub(r'[#*\-`]', '', raw_text).strip()
+                        if clean_text:
+                            # Use first 300 characters for audio generation to prevent rate limits
+                            tts = gTTS(text=clean_text[:300], lang="en")
+                            filename = f"{uuid.uuid4()}.mp3"
+                            audio_path = os.path.join(
+                                settings.MEDIA_ROOT,
+                                "audio",
+                                filename
+                            )
+                            os.makedirs(os.path.dirname(audio_path), exist_ok=True)
+                            tts.save(audio_path)
+                            audio_url = settings.MEDIA_URL + "audio/" + filename
+                    except Exception:
+                        audio_url = ""
 
             except Exception as e:
                 generated_html = f"<p class='text-danger'>⚠️ {e}</p>"
@@ -165,6 +157,7 @@ def home(request):
         "generated_text": generated_html,
         "audio_url": audio_url,
     })
+
 
 
 # --- Authentication & User Views ---
