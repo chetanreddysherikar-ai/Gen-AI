@@ -99,10 +99,12 @@ Do not add any extra text outside this structure.
 
     models_to_try = [
         "gemini-2.5-flash",
-        "gemini-1.5-flash",
+        "gemini-flash-latest",
     ]
 
+    quota_exceeded = False
     last_error = None
+
     for model_name in models_to_try:
         for attempt in range(2):
             try:
@@ -113,17 +115,25 @@ Do not add any extra text outside this structure.
                 if response and hasattr(response, 'text') and response.text:
                     return response.text
             except Exception as e:
+                err_text = str(e)
+                if "429" in err_text or "RESOURCE_EXHAUSTED" in err_text or "quota" in err_text.lower():
+                    quota_exceeded = True
                 last_error = e
                 import time
                 time.sleep(1)
 
-    err_str = str(last_error)
-    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
+    if quota_exceeded:
         raise RuntimeError("Google AI Free Tier daily quota limit reached (20 requests/day). Please generate a new free API key at https://aistudio.google.com/app/apikey and update your .env file!")
-    elif "503" in err_str or "UNAVAILABLE" in err_str:
-        raise RuntimeError("Google AI servers are currently experiencing high demand. Please wait 10 seconds and try again.")
-    else:
-        raise last_error or RuntimeError("Service temporarily busy. Please try again.")
+
+    if last_error:
+        err_str = str(last_error)
+        if "503" in err_str or "UNAVAILABLE" in err_str:
+            raise RuntimeError("Google AI servers are currently experiencing high demand. Please wait 10 seconds and try again.")
+        elif "404" in err_str or "NOT_FOUND" in err_str:
+            raise RuntimeError("Google AI service is temporarily busy. Please click Generate again!")
+        raise last_error
+    raise RuntimeError("Service temporarily busy. Please try again.")
+
 
 
 def home(request):
