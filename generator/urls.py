@@ -13,10 +13,9 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     path("logout/", views.user_logout, name="logout"),
     
-    # PDF Download, Reader & Voice Generator
+    # PDF Download & Reader
     path("download-pdf/", views.download_pdf, name="download_pdf"),
     path("read-pdf/", views.read_pdf, name="read_pdf"),
-    path("text-to-audio/", views.text_to_audio, name="text_to_audio"),
     
     # NEW: Google Maps Routing
     path("route/", views.map_route, name="map_route"),
