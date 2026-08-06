@@ -97,12 +97,32 @@ Do not write paragraphs.
 Do not add any extra text outside this structure.
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-    )
+    models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+    ]
 
-    return response.text
+    last_error = None
+    for model_name in models_to_try:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                )
+                if response and hasattr(response, 'text') and response.text:
+                    return response.text
+            except Exception as e:
+                last_error = e
+                import time
+                time.sleep(0.5)
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("Service temporarily busy. Please try again in a few seconds.")
+
 
 
 def home(request):
