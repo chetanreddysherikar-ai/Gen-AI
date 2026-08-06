@@ -410,57 +410,6 @@ def text_to_audio(request):
     return render(request, "text_to_audio.html", {"text": text})
 
 
-def ai_video(request):
-    prompt_text = ""
-    scenes = []
-    error_message = ""
-
-    if request.method == "POST":
-        prompt_text = request.POST.get("prompt", "").strip()
-
-        if prompt_text:
-            try:
-                ai_prompt = f"""
-You are an AI Video Storyboard Director.
-Create a 3-scene animation script for the topic: "{prompt_text}".
-
-Return EXACTLY a JSON array of 3 objects with keys: "scene_number", "title", "subtitle", "color_scheme", "narration".
-Format example:
-[
-  {{"scene_number": 1, "title": "Scene Title 1", "subtitle": "Visual scene description", "color_scheme": "#00f2fe", "narration": "Narration line 1"}},
-  {{"scene_number": 2, "title": "Scene Title 2", "subtitle": "Visual scene description", "color_scheme": "#7c5cff", "narration": "Narration line 2"}},
-  {{"scene_number": 3, "title": "Scene Title 3", "subtitle": "Visual scene description", "color_scheme": "#ff007f", "narration": "Narration line 3"}}
-]
-
-Do not include any explanation or extra text outside the JSON.
-"""
-                raw_response = generate_text(ai_prompt)
-                
-                match = re.search(r'\[.*\]', raw_response, re.DOTALL)
-                if match:
-                    scenes = json.loads(match.group(0))
-                else:
-                    scenes = [
-                        {"scene_number": 1, "title": f"Beginning of {prompt_text}", "subtitle": "Initializing futuristic visual space", "color_scheme": "#00f2fe", "narration": f"Welcome to the visual story of {prompt_text}."},
-                        {"scene_number": 2, "title": f"Exploring {prompt_text}", "subtitle": "Deep dive into core concepts and dynamic elements", "color_scheme": "#7c5cff", "narration": f"Here we explore the key dynamics and future potential of {prompt_text}."},
-                        {"scene_number": 3, "title": "Future Horizon", "subtitle": "Synthesis and forward-looking conclusions", "color_scheme": "#ff007f", "narration": f"This concludes our AI visual exploration of {prompt_text}."}
-                    ]
-            except Exception as e:
-                error_message = str(e)
-                scenes = [
-                    {"scene_number": 1, "title": f"Visual Scene: {prompt_text}", "subtitle": "High definition AI canvas particle visualization", "color_scheme": "#00f2fe", "narration": f"Visual scene exploring {prompt_text}."},
-                    {"scene_number": 2, "title": "Dynamic Motion", "subtitle": "Flowing visual energy and cyber particle matrix", "color_scheme": "#7c5cff", "narration": "Deep exploration of motion dynamics."},
-                    {"scene_number": 3, "title": "Synthesis", "subtitle": "Final scene composition", "color_scheme": "#ff007f", "narration": "Synthesis of key ideas."}
-                ]
-
-    return render(request, "ai_video.html", {
-        "prompt": prompt_text,
-        "scenes": scenes,
-        "scenes_json": json.dumps(scenes),
-        "error": error_message,
-    })
-
-
 
 
 @login_required
