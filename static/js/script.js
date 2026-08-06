@@ -328,7 +328,9 @@ function copyText(elementId) {
 }
 
 // --- BROWSER NATIVE SPEECH SYNTHESIS VOICE CONTROLLER ---
-let currentSpeechUtterance = null;
+let currentUtteranceIndex = 0;
+let textChunks = [];
+let isVoicePlaying = false;
 
 function playAIVoice(elementId) {
   if (!('speechSynthesis' in window)) {
@@ -339,84 +341,100 @@ function playAIVoice(elementId) {
   const playBtn = document.getElementById("voicePlayBtn");
   const statusEl = document.getElementById("voiceStatus");
 
-  // Chrome Unfreeze Workaround if paused
+  // Resume if paused
   if (window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
+    isVoicePlaying = true;
     if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
     if (statusEl) statusEl.style.display = "inline-flex";
     return;
   }
 
-  // Toggle Pause if speaking
-  if (window.speechSynthesis.speaking) {
+  // Pause if speaking
+  if (window.speechSynthesis.speaking && isVoicePlaying) {
     window.speechSynthesis.pause();
+    isVoicePlaying = false;
     if (playBtn) playBtn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Resume Voice';
     return;
   }
 
-  // Cancel any previous utterance
+  // Cancel any previous speech
   window.speechSynthesis.cancel();
 
-  const el = document.getElementById(elementId || "result");
+  const el = document.getElementById(elementId) || document.getElementById("ai-text-content") || document.getElementById("result");
   if (!el) return;
 
-  // Clean text from Markdown symbols
-  let cleanText = el.innerText.replace(/[*#\-`]/g, "").trim();
+  // Extract clean text
+  let rawText = el.innerText || el.textContent || "";
+  rawText = rawText.replace(/Download PDF Document|Copy Text/gi, "");
+  let cleanText = rawText.replace(/[*#\-`]/g, " ").replace(/\s+/g, " ").trim();
   if (!cleanText) return;
 
-  // Limit chunk size for speech synthesis stability
-  if (cleanText.length > 600) {
-    cleanText = cleanText.substring(0, 600) + ".";
-  }
+  // Break text into natural sentence chunks for continuous complete reading
+  textChunks = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+  currentUtteranceIndex = 0;
+  isVoicePlaying = true;
 
-  currentSpeechUtterance = new SpeechSynthesisUtterance(cleanText);
-  currentSpeechUtterance.lang = "en-US";
-  currentSpeechUtterance.rate = 0.95;
-  currentSpeechUtterance.pitch = 1.0;
-
-  const speakNow = function () {
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      const preferredVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("David") || v.name.includes("Zira") || v.name.includes("Mark")));
-      if (preferredVoice) {
-        currentSpeechUtterance.voice = preferredVoice;
-      }
+  function speakChunk() {
+    if (currentUtteranceIndex >= textChunks.length || !isVoicePlaying) {
+      isVoicePlaying = false;
+      if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+      if (statusEl) statusEl.style.display = "none";
+      return;
     }
 
-    currentSpeechUtterance.onstart = function () {
-      if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
-      if (statusEl) statusEl.style.display = "inline-flex";
+    const chunk = textChunks[currentUtteranceIndex].trim();
+    if (!chunk) {
+      currentUtteranceIndex++;
+      speakChunk();
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.lang = "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      const preferredVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("David") || v.name.includes("Zira")));
+      if (preferredVoice) utterance.voice = preferredVoice;
+    }
+
+    utterance.onend = function () {
+      currentUtteranceIndex++;
+      speakChunk();
     };
 
-    currentSpeechUtterance.onend = function () {
-      if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
-      if (statusEl) statusEl.style.display = "none";
+    utterance.onerror = function (e) {
+      console.warn("Speech chunk error:", e);
+      currentUtteranceIndex++;
+      speakChunk();
     };
 
-    currentSpeechUtterance.onerror = function (e) {
-      console.warn("Speech error:", e);
-      if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
-      if (statusEl) statusEl.style.display = "none";
-    };
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
+    if (statusEl) statusEl.style.display = "inline-flex";
 
     window.speechSynthesis.resume();
-    window.speechSynthesis.speak(currentSpeechUtterance);
-  };
-
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = speakNow;
+    window.speechSynthesis.speak(utterance);
   }
-  speakNow();
+
+  window.speechSynthesis.resume();
+  speakChunk();
 }
 
 function stopAIVoice() {
+  isVoicePlaying = false;
+  textChunks = [];
+  currentUtteranceIndex = 0;
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    const playBtn = document.getElementById("voicePlayBtn");
-    const statusEl = document.getElementById("voiceStatus");
-    if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
-    if (statusEl) statusEl.style.display = "none";
   }
+  const playBtn = document.getElementById("voicePlayBtn");
+  const statusEl = document.getElementById("voiceStatus");
+  if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+  if (statusEl) statusEl.style.display = "none";
 }
+
 
 
