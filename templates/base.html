@@ -20,7 +20,11 @@
             <span class="brand-icon">🤖</span> Gen-AI
         </a>
 
-        <div class="d-flex align-items-center gap-2 ms-auto">
+        <div class="d-flex align-items-center gap-2 ms-auto flex-wrap">
+            
+            <a href="{% url 'home' %}" class="btn btn-nav">
+                <i class="bi bi-house-door-fill"></i> Home
+            </a>
             
             <!-- PDF Reader Link -->
             <a href="{% url 'read_pdf' %}" class="btn btn-nav">
