@@ -436,5 +436,119 @@ function stopAIVoice() {
   if (statusEl) statusEl.style.display = "none";
 }
 
+// --- CUSTOM TEXT-TO-AUDIO CONVERTER ENGINE ---
+let customUtteranceIndex = 0;
+let customChunks = [];
+let isCustomAudioPlaying = false;
+
+function convertCustomTextToAudio() {
+  if (!('speechSynthesis' in window)) {
+    alert("Speech Synthesis is not supported in your browser.");
+    return;
+  }
+
+  const textInput = document.getElementById("customTextInput");
+  const playBtn = document.getElementById("textAudioPlayBtn");
+  const statusBadge = document.getElementById("audioStatusBadge");
+  const voiceSelect = document.getElementById("voiceSelect");
+  const speedSelect = document.getElementById("speedSelect");
+
+  // Resume if paused
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    isCustomAudioPlaying = true;
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-circle-fill me-2"></i> Pause Audio';
+    if (statusBadge) statusBadge.style.display = "inline-flex";
+    return;
+  }
+
+  // Pause if playing
+  if (window.speechSynthesis.speaking && isCustomAudioPlaying) {
+    window.speechSynthesis.pause();
+    isCustomAudioPlaying = false;
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Resume Audio';
+    return;
+  }
+
+  // Cancel any active speech
+  window.speechSynthesis.cancel();
+
+  const text = textInput ? textInput.value.trim() : "";
+  if (!text) {
+    alert("Please enter or paste some text first!");
+    return;
+  }
+
+  const selectedLang = voiceSelect ? voiceSelect.value : "en-US";
+  const selectedSpeed = speedSelect ? parseFloat(speedSelect.value) : 1.0;
+
+  // Clean and chunk text into sentences
+  const cleanText = text.replace(/[*#\-`]/g, " ").replace(/\s+/g, " ").trim();
+  customChunks = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+  customUtteranceIndex = 0;
+  isCustomAudioPlaying = true;
+
+  function speakNextCustomChunk() {
+    if (customUtteranceIndex >= customChunks.length || !isCustomAudioPlaying) {
+      isCustomAudioPlaying = false;
+      if (playBtn) playBtn.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Convert & Play Audio';
+      if (statusBadge) statusBadge.style.display = "none";
+      return;
+    }
+
+    const chunk = customChunks[customUtteranceIndex].trim();
+    if (!chunk) {
+      customUtteranceIndex++;
+      speakNextCustomChunk();
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.lang = selectedLang;
+    utterance.rate = selectedSpeed;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      const preferred = voices.find(v => v.lang.startsWith(selectedLang.split('-')[0]));
+      if (preferred) utterance.voice = preferred;
+    }
+
+    utterance.onend = function () {
+      customUtteranceIndex++;
+      speakNextCustomChunk();
+    };
+
+    utterance.onerror = function (e) {
+      console.warn("Custom speech error:", e);
+      customUtteranceIndex++;
+      speakNextCustomChunk();
+    };
+
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-circle-fill me-2"></i> Pause Audio';
+    if (statusBadge) statusBadge.style.display = "inline-flex";
+
+    window.speechSynthesis.resume();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  window.speechSynthesis.resume();
+  speakNextCustomChunk();
+}
+
+function stopCustomAudio() {
+  isCustomAudioPlaying = false;
+  customChunks = [];
+  customUtteranceIndex = 0;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  const playBtn = document.getElementById("textAudioPlayBtn");
+  const statusBadge = document.getElementById("audioStatusBadge");
+  if (playBtn) playBtn.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Convert & Play Audio';
+  if (statusBadge) statusBadge.style.display = "none";
+}
+
+
 
 

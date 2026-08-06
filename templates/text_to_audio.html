@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Text to Audio Generator — Gen-AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in-up">
+    <div class="col-lg-10 col-md-12">
+
+        <!-- Header Card -->
+        <div class="glass-card p-4 p-md-5 mb-4">
+            <div class="text-center mb-4">
+                <span class="hero-badge mb-3"><i class="bi bi-mic-fill text-info"></i> AI Audio Converter</span>
+                <h1 class="fw-bold display-6 mb-2">
+                    🎙️ <span class="gradient-text">Text to Audio</span> Converter
+                </h1>
+                <p class="text-light fs-6">
+                    Type or paste any text below to convert it into crystal-clear AI voice narration instantly.
+                </p>
+            </div>
+
+            <!-- Custom Text Input Area -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-semibold mb-0"><i class="bi bi-fonts me-1"></i> Enter or Paste Your Text:</label>
+                    <small class="text-muted" id="charCounter">0 characters | 0 words</small>
+                </div>
+
+                <textarea id="customTextInput" class="form-control" rows="7"
+                          placeholder="Type or paste any paragraph, article, or notes here..." required autofocus></textarea>
+                
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="loadSampleText()">
+                        <i class="bi bi-file-earmark-text me-1"></i> Load Sample
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCustomText()">
+                        <i class="bi bi-trash me-1"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Voice Controls & Settings Grid (Mobile Responsive) -->
+            <div class="glass-card p-3 p-md-4 mb-4 bg-surface-strong">
+                <h5 class="fw-bold mb-3"><i class="bi bi-sliders me-2 text-info"></i> Audio Settings</h5>
+                
+                <div class="row g-3">
+                    <!-- Voice Selector -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small text-muted mb-1">Select Voice Accent:</label>
+                        <select id="voiceSelect" class="form-select">
+                            <option value="en-US">🇺🇸 US English (Natural)</option>
+                            <option value="en-GB">🇬🇧 UK English (Classic)</option>
+                            <option value="en-IN">🇮🇳 Indian English</option>
+                            <option value="en-AU">🇦🇺 Australian English</option>
+                        </select>
+                    </div>
+
+                    <!-- Speed Rate Selector -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small text-muted mb-1">Playback Speed Rate:</label>
+                        <select id="speedSelect" class="form-select">
+                            <option value="0.75">0.75x — Slow & Clear</option>
+                            <option value="1.0" selected>1.0x — Normal Speed</option>
+                            <option value="1.25">1.25x — Fast</option>
+                            <option value="1.5">1.5x — Rapid</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playback Control Bar -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 glass-card rounded-4">
+                <div class="d-flex align-items-center gap-2 flex-wrap w-100 w-sm-auto">
+                    <button id="textAudioPlayBtn" class="btn btn-primary btn-lg flex-fill flex-sm-grow-0 px-4" onclick="convertCustomTextToAudio()">
+                        <i class="bi bi-play-circle-fill me-2"></i> Convert & Play Audio
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg flex-fill flex-sm-grow-0" onclick="stopCustomAudio()" title="Stop Audio">
+                        <i class="bi bi-square-fill me-1"></i> Stop
+                    </button>
+                </div>
+
+                <div id="audioStatusBadge" class="badge bg-info text-dark px-3 py-2 fs-6 fade-in-up" style="display: none;">
+                    <i class="bi bi-soundwave me-1"></i> AI Speaking...
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Character and Word Counter for Mobile & Desktop
+document.addEventListener("DOMContentLoaded", function () {
+    const textInput = document.getElementById("customTextInput");
+    const counter = document.getElementById("charCounter");
+
+    if (textInput && counter) {
+        textInput.addEventListener("input", function () {
+            const val = textInput.value;
+            const charCount = val.length;
+            const wordCount = val.trim() ? val.trim().split(/\s+/).length : 0;
+            counter.innerText = `${charCount} characters | ${wordCount} words`;
+        });
+    }
+});
+
+function loadSampleText() {
+    const sample = "Gen-AI is an advanced artificial intelligence platform designed to generate high quality structured text, convert notes into audio narration, and assist you with intelligent content creation.";
+    const textInput = document.getElementById("customTextInput");
+    if (textInput) {
+        textInput.value = sample;
+        textInput.dispatchEvent(new Event("input"));
+    }
+}
+
+function clearCustomText() {
+    const textInput = document.getElementById("customTextInput");
+    if (textInput) {
+        textInput.value = "";
+        textInput.dispatchEvent(new Event("input"));
+    }
+    stopCustomAudio();
+}
+</script>
+{% endblock %}

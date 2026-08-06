@@ -22,14 +22,18 @@
 
         <div class="d-flex align-items-center gap-2 ms-auto">
             
-            <!-- NEW: PDF Reader Link (Visible to everyone) -->
+            <!-- PDF Reader Link -->
             <a href="{% url 'read_pdf' %}" class="btn btn-nav">
                 <i class="bi bi-file-earmark-pdf"></i> PDF Reader
             </a>
             
+            <a href="{% url 'text_to_audio' %}" class="btn btn-nav text-info">
+                <i class="bi bi-mic-fill"></i> Text to Audio
+            </a>
+            
             <a href="{% url 'map_route' %}" class="btn btn-nav text-warning">
-    <i class="bi bi-geo-alt-fill"></i> Route Finder
-</a>
+                <i class="bi bi-geo-alt-fill"></i> Route Finder
+            </a>
 
             {% if user.is_authenticated %}
                 <a href="{% url 'dashboard' %}" class="btn btn-nav d-none d-md-inline-flex">

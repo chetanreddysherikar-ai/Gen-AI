@@ -324,3 +324,26 @@ main { flex: 1; }
   background-size: 30px 30px;
 }
 
+/* ===== Mobile Responsive Optimization ===== */
+@media (max-width: 768px) {
+  .robot-3d-wrapper {
+    height: 280px;
+  }
+  .navbar-brand {
+    font-size: 1.25rem !important;
+  }
+  .btn-nav {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.85rem;
+  }
+  .glass-card {
+    padding: 1.25rem !important;
+    border-radius: 18px !important;
+  }
+  .form-control-lg {
+    height: 52px;
+    font-size: 16px;
+  }
+}
+
+

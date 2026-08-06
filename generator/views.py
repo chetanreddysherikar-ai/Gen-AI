@@ -376,6 +376,14 @@ def profile(request):
     return render(request, "profile.html", {"profile": user_profile})
 
 
+def text_to_audio(request):
+    text = ""
+    if request.method == "POST":
+        text = request.POST.get("text", "").strip()
+    return render(request, "text_to_audio.html", {"text": text})
+
+
+
 @login_required
 def user_logout(request):
     logout(request)
