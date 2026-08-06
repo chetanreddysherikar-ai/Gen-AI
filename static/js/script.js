@@ -326,3 +326,82 @@ function copyText(elementId) {
     }
   });
 }
+
+// --- BROWSER NATIVE SPEECH SYNTHESIS VOICE CONTROLLER ---
+let currentSpeechUtterance = null;
+
+function playAIVoice(elementId) {
+  if (!('speechSynthesis' in window)) {
+    alert("Speech Synthesis is not supported in this browser.");
+    return;
+  }
+
+  const el = document.getElementById(elementId || "result");
+  if (!el) return;
+
+  const playBtn = document.getElementById("voicePlayBtn");
+  const statusEl = document.getElementById("voiceStatus");
+
+  // If already speaking and paused, resume!
+  if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
+    if (statusEl) statusEl.style.display = "inline-flex";
+    return;
+  }
+
+  // If already speaking and active, pause!
+  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Resume Voice';
+    return;
+  }
+
+  // Otherwise, start fresh speech synthesis
+  window.speechSynthesis.cancel();
+
+  // Clean text from Markdown symbols
+  const cleanText = el.innerText.replace(/[*#\-`]/g, "").trim();
+  if (!cleanText) return;
+
+  currentSpeechUtterance = new SpeechSynthesisUtterance(cleanText);
+  currentSpeechUtterance.rate = 0.95; // Natural human speed
+  currentSpeechUtterance.pitch = 1.0;
+
+  // Select preferred English voice
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    const preferredVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("David") || v.name.includes("Zira")));
+    if (preferredVoice) {
+      currentSpeechUtterance.voice = preferredVoice;
+    }
+  }
+
+  currentSpeechUtterance.onstart = function () {
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-pause-fill me-1"></i> Pause Voice';
+    if (statusEl) statusEl.style.display = "inline-flex";
+  };
+
+  currentSpeechUtterance.onend = function () {
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+    if (statusEl) statusEl.style.display = "none";
+  };
+
+  currentSpeechUtterance.onerror = function () {
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+    if (statusEl) statusEl.style.display = "none";
+  };
+
+  window.speechSynthesis.speak(currentSpeechUtterance);
+}
+
+function stopAIVoice() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const playBtn = document.getElementById("voicePlayBtn");
+    const statusEl = document.getElementById("voiceStatus");
+    if (playBtn) playBtn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i> Listen to AI Voice';
+    if (statusEl) statusEl.style.display = "none";
+  }
+}
+
